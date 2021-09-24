@@ -13,9 +13,44 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls import url
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
+from distributor import views
+from users import views as user_views
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Snippets API",
+      default_version='v1',
+      description="Test description",
+      terms_of_service="https://www.google.com/policies/terms/",
+      contact=openapi.Contact(email="contact@snippets.local"),
+      license=openapi.License(name="BSD License"),
+   ),
+   public=True,
+   permission_classes=[permissions.AllowAny],
+)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-]
+    path('api/v1/news/', views.NewsListAPIView.as_view()),
+    path('api/v1/news/<int:pk>/', views.NewsItemAPIView.as_view()),
+    path('api/v1/legislation/categories/', views.LegislationCategoryAPIVIew.as_view()),
+    path('api/v1/legislation/', views.LegislationListAPIVIew.as_view()),
+    path('api/v1/legislation/<int:pk>/', views.LegislationItemAPIVIew.as_view()),
+    # path('api/v1/legislation/<int:pk>/pdf/', views.LegislationPDFAPIVIew.as_view()),
+    path('api/v1/auth/otp/', user_views.OTPView.as_view()),
+    path('api/v1/auth/confirm/', user_views.ConfirmOTPCodeView.as_view()),
+    # path('/pdf_file/', views.pdf_file()),
+    url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT), static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
